@@ -20,6 +20,7 @@ public class XposedInit implements IXposedHookLoadPackage {
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) {
         if (lpparam.packageName.equals(PACKAGE_NAME)) {
+            //注意有问题，多个apk的情况如何处理包名???
             LogUtil.start(lpparam.packageName, lpparam.processName);
             NetDataPrinter.hook(null, true);
             WebViewDebuggerController.enableDebug(lpparam.classLoader, lpparam.packageName);
