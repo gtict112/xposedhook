@@ -29,6 +29,11 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:25.3.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'commons-io:commons-io:2.4'
+    compile group: 'com.google.guava', name: 'guava', version: '23.4-android'
+    compile 'com.google.code.findbugs:jsr305:2.0.1'
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     testCompile 'junit:junit:4.12'
     //最新版本这里可以看到 https://bintray.com/rovo89/de.robv.android.xposed/api
     provided 'de.robv.android.xposed:api:82'

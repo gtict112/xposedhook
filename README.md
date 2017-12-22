@@ -1,7 +1,7 @@
 ## hook base工具
 Android 破解的hook工具，集成一些帮助破解的常用功能，如自动网络抓包、网络堆栈爆破、文件日志、webview调试环境
 
-入口在 com.virjar.xposedhooktool.XposedInit
+入口在 com.virjar.xposedhooktool.hotload.XposedInit
 
 
 ## Xposed从入门到弃坑 系列教程工程

@@ -1,4 +1,4 @@
-package com.virjar.xposedhooktool.log;
+package com.virjar.xposedhooktool.tool.log;
 
 import android.app.Application;
 

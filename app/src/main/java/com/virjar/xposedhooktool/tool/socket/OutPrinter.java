@@ -1,6 +1,6 @@
-package com.virjar.xposedhooktool.socket;
+package com.virjar.xposedhooktool.tool.socket;
 
-import com.virjar.xposedhooktool.log.LogUtil;
+import com.virjar.xposedhooktool.tool.log.LogUtil;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

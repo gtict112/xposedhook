@@ -1,4 +1,4 @@
-package com.virjar.xposedhooktool.webview;
+package com.virjar.xposedhooktool.tool.webview;
 
 import android.os.Build;
 

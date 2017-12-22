@@ -1,0 +1,108 @@
+package com.virjar.xposedhooktool.hotload;
+
+import android.app.Application;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import dalvik.system.PathClassLoader;
+import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.XposedHelpers;
+import de.robv.android.xposed.callbacks.XC_LoadPackage;
+
+/**
+ * XposedInit
+ *
+ * @author virjar@virjar.com
+ */
+public class XposedInit implements IXposedHookLoadPackage {
+
+    private static final Pattern dexPath4ClassLoaderPattern = Pattern.compile("\\[zip file \"(.+)\"");
+
+    @Override
+    public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) {
+        XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                hotLoadPlugin(lpparam.classLoader, (Context) param.args[0], lpparam);
+            }
+        });
+    }
+
+    private void hotLoadPlugin(ClassLoader ownerClassLoader, Context context, XC_LoadPackage.LoadPackageParam lpparam) {
+        ClassLoader classLoader = XposedInit.class.getClassLoader();
+        if (!(classLoader instanceof PathClassLoader)) {
+            XposedBridge.log("classloader is not PathClassLoader: " + classLoader.toString());
+            return;
+        }
+
+        PathClassLoader parentClassLoader = (PathClassLoader) classLoader;
+        String classloaderDescription = parentClassLoader.toString();
+        Matcher matcher = dexPath4ClassLoaderPattern.matcher(classloaderDescription);
+        if (!matcher.find()) {
+            XposedBridge.log("can not find plugin apk file location");
+            return;
+        }
+        String pluginApkLocation = matcher.group(1);
+        XposedBridge.log("find plugin location " + pluginApkLocation + ", use for new classloader");
+        String packageName = findPackageName(pluginApkLocation);
+        if (StringUtils.isBlank(packageName)) {
+            XposedBridge.log("can not find mirror of apk :" + pluginApkLocation);
+            return;
+        }
+
+        //find real apk location by package name
+        PackageManager packageManager = context.getPackageManager();
+        if (packageManager == null) {
+            XposedBridge.log("can not find packageManager");
+            return;
+        }
+
+        PackageInfo packageInfo = null;
+
+        try {
+            packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_META_DATA);
+        } catch (PackageManager.NameNotFoundException e) {
+            //ignore
+        }
+        if (packageInfo == null) {
+            XposedBridge.log("can not find plugin install location for plugin: " + packageName);
+            return;
+        }
+
+        //hotClassLoader can load apk class && classLoader.getParent() can load xposed framework and android framework
+        PathClassLoader hotClassLoader = new PathClassLoader(packageInfo.applicationInfo.sourceDir, classLoader.getParent());
+        try {
+            Class<?> aClass = hotClassLoader.loadClass("com.virjar.xposedhooktool.hotload.HotLoadPackageEntry");
+            aClass.getMethod("entry").invoke(null, ownerClassLoader, hotClassLoader, context, lpparam, packageInfo.applicationInfo.sourceDir);
+        } catch (Exception e) {
+            XposedBridge.log(e);
+        }
+    }
+
+
+    private static final Pattern apkNamePattern = Pattern.compile("/data/app/([^/]+).*");
+
+    private String findPackageName(String apkLocation) {
+        Matcher matcher = apkNamePattern.matcher(apkLocation);
+        if (!matcher.matches()) {
+            return null;
+        }
+        String candidatePackageName = matcher.group(1);
+        //com.virjar.xposedhooktool-1
+        //com.virjar.xposedhooktool-2
+        //com.virjar.xposedhooktool
+        matcher = Pattern.compile("(.+)-\\d+").matcher(candidatePackageName);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return candidatePackageName;
+    }
+}
