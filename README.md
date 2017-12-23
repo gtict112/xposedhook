@@ -13,7 +13,7 @@ Android 破解的hook工具，集成一些帮助破解的常用功能，如自�
 ## 关于热加载
 本工具环境绕过了xposed插件更新需要重启Android设备的限制，关于xposed热加载网上有一些方案：
 如:https://github.com/githubwing/HotXposed 和 https://github.com/liuyufei/hotposed 但是我觉得这两个都有一些不方便的地方，而且还存在权限的风险（她们都借助sdcard和热发代码通信，但是宿主进程可能没有sdcard权限，这样加载热发代码会报错）
-她们都需要双apk配合，用来隔离插件和基座，第二个还需要删除原插件xposed入口，使插件编程热加载插件的插件
+她们都需要双apk配合，用来隔离插件和基座，第二个还需要删除原插件xposed入口，使插件变成热加载插件的插件
 
 ### 关于我们的热加载
 使用我们这个热加载没有这么麻烦，hotload模块的设计和xposed本身类似。只需要在/assets/hotload_entry.txt中配置入口，即可正常实现热加载。
@@ -44,7 +44,7 @@ SharedObject包含的参数如下：
 
 ## 关于DroidSword
 DroidSword是我在了解热加载方案的时候，发现作者的另一个项目。看了一下描述感觉满满的黑科技，但是代码是kotlin写的，没有学过kotlin所以看了看用java实现了一份，然后移植到了工具内部（想想当年写Android程序的时候，官方ide是eclipse，市面上的Android手机版本长时间2.3。真是岁月蹉跎。技术变化速度真的难让人追上，就像一个你喜欢的姑娘，眼看着离你越来越远---越来越远-----!）
-原作者项目地址：![https://github.com/githubwing/DroidSword](https://github.com/githubwing/DroidSword)
+原作者项目地址：[https://github.com/githubwing/DroidSword](https://github.com/githubwing/DroidSword)
 
 ### DroidSword如何使用
 不需要做任何配置，DroidSword插件会默认在hook的apk的界面上面附加一个浮层，上面显示当前activity信息，如果点击了某些控件，还会尝试寻找这些控件的名称、回调函数。
@@ -55,4 +55,4 @@ DroidSword是我在了解热加载方案的时候，发现作者的另一个项�
 顺便说一句，默认组件都是可以在这里关闭的。当然我没有提供配置入口来关闭，修改框架默认策略目前都是对代码的修改
 
 ### DroidSword效果
-![img](doc/img/DroidSword.jpg)
+![DroidSword效果图](doc/img/DroidSword.jpg)
