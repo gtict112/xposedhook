@@ -55,6 +55,7 @@ public class XposedInit implements IXposedHookLoadPackage {
             XposedBridge.log("can not find plugin apk file location");
             return;
         }
+        //更加标准的做法，读取AndroidManifest.xml，解析PackageName，可以参考apkTool的做法，或者参考ApkInstaller的代码
         String pluginApkLocation = matcher.group(1);
         String packageName = findPackageName(pluginApkLocation);
         if (StringUtils.isBlank(packageName)) {
