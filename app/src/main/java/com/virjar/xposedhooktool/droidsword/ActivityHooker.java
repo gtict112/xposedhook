@@ -3,6 +3,7 @@ package com.virjar.xposedhooktool.droidsword;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.collect.Sets;
+import com.virjar.xposedhooktool.tool.ReflectUtil;
 
 import java.util.Set;
 
@@ -20,24 +22,53 @@ import de.robv.android.xposed.XposedHelpers;
 
 /**
  * Created by virjar on 2017/12/23.<br/>
+ *
+ * @author virjar
  */
-
 class ActivityHooker {
     @SuppressLint("StaticFieldLeak")
     private static TextView sTextView = null;
     private static String sActivityName = null;
     private static String sViewName = null;
     static Set<String> sFragments = Sets.newConcurrentHashSet();
+    private static Set<Class> hookedClass = Sets.newConcurrentHashSet();
+    private static ResumeHookCallBack resumeHookCallBack = new ResumeHookCallBack();
+
+    private static class ResumeHookCallBack extends XC_MethodHook {
+        @Override
+        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+            super.afterHookedMethod(param);
+            Object hasCalled = param.getObjectExtra("hasCalled");
+            if (hasCalled != null) {
+                return;
+            }
+            param.setObjectExtra("hasCalled", "true");
+            Activity activity = (Activity) param.thisObject;
+            addTextView(activity);
+        }
+    }
 
     static void hookActivity() {
-        XposedHelpers.findAndHookMethod(Activity.class, "onResume", new XC_MethodHook() {
+        //constructor存在继承链，这样可以hook所有实现类，避免直接hook onResume时，目标代码没有call supper，导致挂钩无效
+        XposedHelpers.findAndHookConstructor(Activity.class, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                super.afterHookedMethod(param);
-                Activity activity = (Activity) param.thisObject;
-                addTextView(activity);
+                Object activity = param.thisObject;
+                if (activity == null) {
+                    return;
+                }
+                XposedBridge.log("hook class " + activity.getClass());
+                Class<?> aClass = activity.getClass();
+                if (hookedClass.contains(aClass)) {
+                    return;
+                }
+                hookedClass.add(aClass);
+                //避免重复hook，所以使用唯一对象，因为xposed内部是一个set来存储钩子函数，唯一对象可以消重
+                //XposedHelpers.findAndHookMethod(aClass, "onResume", resumeHookCallBack);
+                ReflectUtil.findAndHookMethodWithSupperClass(aClass, "onResume", resumeHookCallBack);
             }
         });
+
     }
 
     private static void addTextView(Activity activity) {
@@ -84,8 +115,9 @@ class ActivityHooker {
         });
     }
 
-    private static void setActionInfoToMenu(String activityName, String viewName) {
+    static void setActionInfoToMenu(String activityName, String viewName) {
         sTextView.setText(getActionInfo(activityName, viewName));
+        //sTextView.invalidate();
     }
 
     private static String getActionInfo(String activityName, String viewName) {
@@ -94,10 +126,13 @@ class ActivityHooker {
         }
         if (viewName.length() > 0) {
             sViewName = viewName;
+        } else {
+            sViewName = "none";
         }
         int pid = android.os.Process.myPid();
-        String ret = "Activity: " + sActivityName + " \nPid: " + pid + " \nClick: " + sViewName;
-        XposedBridge.log(ret);
+        String ret = "Activity: " + sActivityName + " \nPid: " + pid + " \naction: " + sViewName;
+        //XposedBridge.log(ret);
+        Log.i("DroidSword", ret);
         return ret;
     }
 }

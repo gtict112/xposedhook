@@ -1,6 +1,7 @@
 package com.virjar.xposedhooktool.droidsword;
 
 import com.virjar.xposedhooktool.hotload.SharedObject;
+import com.virjar.xposedhooktool.tool.ReflectUtil;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -11,20 +12,40 @@ import de.robv.android.xposed.XposedHelpers;
  * 把fragment的信息打印出来
  */
 class FragmentHooker {
+    private static class FragmentResumeHook extends XC_MethodHook {
+        @Override
+        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+            Object hasCalled = param.getObjectExtra("hasCalled");
+            if (hasCalled != null) {
+                return;
+            }
+            param.setObjectExtra("hasCalled", "true");
+            ActivityHooker.sFragments.add(param.thisObject.getClass().getName());
+        }
+    }
+
+    private static FragmentResumeHook fragmentResumeHook = new FragmentResumeHook();
+
     static void hookFragment() {
+        Class<?> fragmentClass;
         try {
-            XposedHelpers.findAndHookMethod(
-                    SharedObject.masterClassLoader.loadClass("android.support.v4.app.Fragment"),
-                    "onResume",
-                    new XC_MethodHook() {
-                        @Override
-                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                            ActivityHooker.sFragments.add(param.thisObject.getClass().getName());
-                        }
-                    });
+            fragmentClass = SharedObject.masterClassLoader.loadClass("android.support.v4.app.Fragment");
         } catch (ClassNotFoundException e) {
             XposedBridge.log("can not lod class \"android.support.v4.app.Fragment\"");
             XposedBridge.log(e);
+            return;
         }
+        XposedHelpers.findAndHookConstructor(fragmentClass, new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                super.afterHookedMethod(param);
+                if (param.thisObject == null) {
+                    return;
+                }
+                ReflectUtil.findAndHookMethodWithSupperClass(param.thisObject.getClass(), "onResume", fragmentResumeHook);
+                //XposedHelpers.findAndHookMethod(param.thisObject.getClass(), "onResume", fragmentResumeHook);
+            }
+        });
+
     }
 }

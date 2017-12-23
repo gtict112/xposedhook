@@ -25,7 +25,7 @@ public class TestHook implements XposedHotLoadCallBack {
 
         //这里是真正hook的代码，所有需要访问的参数，都在com.virjar.xposedhooktool.hotload.SharedObject里面
         XposedBridge.log("hook package: " + SharedObject.loadPackageParam.packageName + " and plugin location is: " + SharedObject.pluginApkLocation);
-        XposedBridge.log("test1234");
+        XposedBridge.log("test");
     }
 
     @Override

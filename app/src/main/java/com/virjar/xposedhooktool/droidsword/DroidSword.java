@@ -8,7 +8,8 @@ package com.virjar.xposedhooktool.droidsword;
 
 public class DroidSword {
     public static void startDroidSword() {
-        ActivityHooker.hookActivity();
         FragmentHooker.hookFragment();
+        ActivityHooker.hookActivity();
+        ViewClickedHooker.hookEvent();
     }
 }

@@ -8,7 +8,7 @@ Android 破解的hook工具，集成一些帮助破解的常用功能，如自�
 3. 工具默认开启网络抓包，以及网络堆栈拦截。任何我们需要分析的数据，都会自网络传输出去，网络是所有逻辑必然流经的出口，拦截她可以方便分析逻辑，定位感兴趣的业务代码
 4. 工具默认开启webview调试，webview调试功能可以实现对h5页面逻辑的分析爆破，请注意在低端机上面调试功能可能不好用，建议在宿主机5.0以上使用。webview调试环境配置请自行问度娘。
 5. 工具系统了新的插件加载入口，用来实现插件代码热加载功能，非常不建议在/assets/xposed_init里面添加新的xposed钩子函数，这里的钩子函数需要安装后重启才能生效。
-
+6. 工具默认启用了DroidSword，DroidSword是一个界面元素定位模块，可以通过touch view元素的方式，获取view的类型、事件回调、activity、fragment信息，便于自顶向下分析逻辑入口
 
 ## 关于热加载
 本工具环境绕过了xposed插件更新需要重启Android设备的限制，关于xposed热加载网上有一些方案：
@@ -41,3 +41,18 @@ SharedObject包含的参数如下：
 ### 关于com.virjar.xposedhooktool.hotload.XposedHotLoadCallBack的回调时机
 热加载代码回调时机是Application的attach的时候，他在xposed 提供的回调loadpackageParam之后，也就是说，如果你要hookpackage load和Application attach之间的流程的话，本工具是不支持的。
 支持很麻烦，这样我需要去hook Android内部代码，但是内部代码容易发生api变动，适配各个版本的api的工作很不好做。不过Application attach本身也是在apk启动前面执行的，所以hook一般的apk业务流程完全没有问题
+
+## 关于DroidSword
+DroidSword是我在了解热加载方案的时候，发现作者的另一个项目。看了一下描述感觉满满的黑科技，但是代码是kotlin写的，没有学过kotlin所以看了看用java实现了一份，然后移植到了工具内部（想想当年写Android程序的时候，官方ide是eclipse，市面上的Android手机版本长时间2.3。真是岁月蹉跎。技术变化速度真的难让人追上，就像一个你喜欢的姑娘，眼看着离你越来越远---越来越远-----!）
+原作者项目地址：![https://github.com/githubwing/DroidSword](https://github.com/githubwing/DroidSword)
+
+### DroidSword如何使用
+不需要做任何配置，DroidSword插件会默认在hook的apk的界面上面附加一个浮层，上面显示当前activity信息，如果点击了某些控件，还会尝试寻找这些控件的名称、回调函数。
+如果觉得界面显示不好看，还可以通过日志查看。每当浮层数据刷新时，数据还会同时在日志中打印一次（打印方式是标准日志，也就是可以通过logcat过滤日志的方式查看）。
+
+### 如何关闭DroidSword
+虽然我觉得不需要关闭DroidSword，但是如果真的要关闭的话，注释掉代码里面`` com.virjar.xposedhooktool.hotload.HotLoadPackageEntry.entry``中开启DroidSword的逻辑即可
+顺便说一句，默认组件都是可以在这里关闭的。当然我没有提供配置入口来关闭，修改框架默认策略目前都是对代码的修改
+
+### DroidSword效果
+![img](doc/img/DroidSword.jpg)
