@@ -2,7 +2,6 @@ package com.virjar.xposedhooktool.tool.webview;
 
 import android.os.Build;
 
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,16 +12,14 @@ import de.robv.android.xposed.XposedHelpers;
 /**
  * Created by virjar on 2017/12/7.
  */
-
 public class WebViewDebuggerController {
     private static Map<String, Boolean> enabledProcess = new HashMap<>();
-    private static volatile boolean isEnabled = false;
 
     public synchronized static void enableDebug(final ClassLoader classLoader, final String packageName) {
 
-
         //hook需要放在webview创建之后，因为webview内部会持有context，在构造前context为null，导致空指针发生
-        XC_MethodHook callBack = new XC_MethodHook() {
+        Class<?> webViewClass = XposedHelpers.findClass("android.webkit.WebView", classLoader);
+        XposedBridge.hookAllConstructors(webViewClass, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
 
@@ -30,7 +27,6 @@ public class WebViewDebuggerController {
 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-
                 if (enabledProcess.containsKey(packageName)) {
                     return;
                 }
@@ -47,12 +43,6 @@ public class WebViewDebuggerController {
                     XposedBridge.log(e);
                 }
             }
-        };
-        Class<?> webViewClass = XposedHelpers.findClass("android.webkit.WebView", classLoader);
-        Constructor<?>[] constructors = webViewClass.getConstructors();
-        for (Constructor constructor : constructors) {
-            //不知道为啥，构造器拿不到，所以拿所有的来hook
-            XposedBridge.hookMethod(constructor, callBack);
-        }
+        });
     }
 }

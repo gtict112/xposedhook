@@ -5,8 +5,11 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
+import com.google.common.collect.Maps;
+
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,6 +22,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * XposedInit
+ * <br/>
+ * 请注意，该类是热加载入口，不允许直接访问工程其他代码，只要访问过的类，都不能实现热加载
  *
  * @author virjar@virjar.com
  */
@@ -51,7 +56,6 @@ public class XposedInit implements IXposedHookLoadPackage {
             return;
         }
         String pluginApkLocation = matcher.group(1);
-        XposedBridge.log("find plugin location " + pluginApkLocation + ", use for new classloader");
         String packageName = findPackageName(pluginApkLocation);
         if (StringUtils.isBlank(packageName)) {
             XposedBridge.log("can not find mirror of apk :" + pluginApkLocation);
@@ -78,15 +82,39 @@ public class XposedInit implements IXposedHookLoadPackage {
         }
 
         //hotClassLoader can load apk class && classLoader.getParent() can load xposed framework and android framework
-        PathClassLoader hotClassLoader = new PathClassLoader(packageInfo.applicationInfo.sourceDir, classLoader.getParent());
+        PathClassLoader hotClassLoader = createClassLoader(classLoader.getParent(), packageInfo);
         try {
             Class<?> aClass = hotClassLoader.loadClass("com.virjar.xposedhooktool.hotload.HotLoadPackageEntry");
-            aClass.getMethod("entry").invoke(null, ownerClassLoader, hotClassLoader, context, lpparam, packageInfo.applicationInfo.sourceDir);
+            aClass
+                    .getMethod("entry", ClassLoader.class, ClassLoader.class, Context.class, XC_LoadPackage.LoadPackageParam.class, String.class)
+                    .invoke(null, ownerClassLoader, hotClassLoader, context, lpparam, packageInfo.applicationInfo.sourceDir);
         } catch (Exception e) {
             XposedBridge.log(e);
         }
     }
 
+    private static ConcurrentMap<String, PathClassLoader> classLoaderCache = Maps.newConcurrentMap();
+
+    /**
+     * 这样做的目的是保证classloader单例，因为宿主存在多个dex的时候，或者有壳的宿主在解密代码之后，存在多次context的创建，当然xposed本身也存在多次IXposedHookLoadPackage的回调
+     *
+     * @param parent      父classloader
+     * @param packageInfo 插件自己的包信息
+     * @return 根据插件apk创建的classloader
+     */
+    private static PathClassLoader createClassLoader(ClassLoader parent, PackageInfo packageInfo) {
+        if (classLoaderCache.containsKey(packageInfo.applicationInfo.sourceDir)) {
+            return classLoaderCache.get(packageInfo.applicationInfo.sourceDir);
+        }
+        synchronized (XposedInit.class) {
+            if (classLoaderCache.containsKey(packageInfo.applicationInfo.sourceDir)) {
+                return classLoaderCache.get(packageInfo.applicationInfo.sourceDir);
+            }
+            PathClassLoader hotClassLoader = new PathClassLoader(packageInfo.applicationInfo.sourceDir, parent);
+            classLoaderCache.putIfAbsent(packageInfo.applicationInfo.sourceDir, hotClassLoader);
+            return hotClassLoader;
+        }
+    }
 
     private static final Pattern apkNamePattern = Pattern.compile("/data/app/([^/]+).*");
 

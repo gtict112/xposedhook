@@ -14,5 +14,13 @@ public class SharedObject {
     public static ClassLoader pluginClassLoader;
     public static Context context;
     public static String pluginApkLocation;
-    public static XC_LoadPackage.LoadPackageParam;
+    public static XC_LoadPackage.LoadPackageParam loadPackageParam;
+
+    static void clear() {
+        masterClassLoader = null;
+        pluginClassLoader = null;
+        context = null;
+        pluginApkLocation = null;
+        loadPackageParam = null;
+    }
 }

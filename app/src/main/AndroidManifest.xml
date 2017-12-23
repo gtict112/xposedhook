@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.virjar.xposedhooktool">
+    package="com.virjar.xposedhooktool">
 
     <application
         android:allowBackup="true"
@@ -11,19 +11,19 @@
         android:theme="@style/AppTheme">
         <meta-data
             android:name="xposedmodule"
-            android:value="true"/>
+            android:value="true" />
         <meta-data
             android:name="xposeddescription"
-            android:value="Easy example which makes the status bar clock red and adds a smiley"/>
+            android:value="a framework for crack app, the environment has many tool for app crack,any question please contact virjar@virjar.com" />
         <meta-data
             android:name="xposedminversion"
-            android:value="82"/>
+            android:value="82" />
 
         <activity android:name="com.virjar.xposedhooktool.MainActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>

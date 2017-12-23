@@ -1,0 +1,5 @@
+# this is hot load entry,all config must be class identify ,an all the class must implement com.virjar.xposedhooktool.hotload.XposedHotLoadCallBack
+# you can not modify xposed entry config file "xposed_init"，such as xposed_init entry can not load newest plugin apk
+
+#the test hook
+com.virjar.xposedhooktool.apphook.TestHook
