@@ -21,11 +21,6 @@ public class WebViewDebuggerController {
         Class<?> webViewClass = XposedHelpers.findClass("android.webkit.WebView", classLoader);
         XposedBridge.hookAllConstructors(webViewClass, new XC_MethodHook() {
             @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-
-            }
-
-            @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 if (enabledProcess.containsKey(packageName)) {
                     return;

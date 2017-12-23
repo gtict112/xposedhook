@@ -62,7 +62,7 @@ public class HotLoadPackageEntry {
     private static List<XposedHotLoadCallBack> findAllCallBack() {
         InputStream stream = SharedObject.pluginClassLoader.getResourceAsStream("assets/hotload_entry.txt");
         if (stream == null) {
-            //cancel log print,because the code while execute for all app process
+            //cancel log print,because the code will execute for all app process
             //XposedBridge.log("can not find hotload_entry.txt,please check");
             return Collections.emptyList();
         }
