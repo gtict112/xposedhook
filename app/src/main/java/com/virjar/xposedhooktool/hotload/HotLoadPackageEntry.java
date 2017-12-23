@@ -3,6 +3,7 @@ package com.virjar.xposedhooktool.hotload;
 import android.content.Context;
 
 import com.google.common.collect.Lists;
+import com.virjar.xposedhooktool.droidsword.DroidSword;
 import com.virjar.xposedhooktool.tool.log.LogUtil;
 import com.virjar.xposedhooktool.tool.socket.NetDataPrinter;
 import com.virjar.xposedhooktool.tool.webview.WebViewDebuggerController;
@@ -52,6 +53,9 @@ public class HotLoadPackageEntry {
 
         //开启webview调试 （便于分析h5实现的加解密）https://www.cnblogs.com/wmhuang/p/7396150.html
         WebViewDebuggerController.enableDebug(masterClassLoader, loadPackageParam.packageName);
+
+        //开启DroidSword
+        DroidSword.startDroidSword();
 
         //加载业务代码回调
         for (XposedHotLoadCallBack callBack : allCallBack) {
