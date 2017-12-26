@@ -1,5 +1,6 @@
 package com.virjar.xposedhooktool.hotload;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -12,6 +13,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 public class SharedObject {
     public static ClassLoader masterClassLoader;
     public static ClassLoader pluginClassLoader;
+    @SuppressLint("StaticFieldLeak")
     public static Context context;
     public static String pluginApkLocation;
     public static XC_LoadPackage.LoadPackageParam loadPackageParam;
