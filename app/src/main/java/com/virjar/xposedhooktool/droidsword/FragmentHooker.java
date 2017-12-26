@@ -1,7 +1,6 @@
 package com.virjar.xposedhooktool.droidsword;
 
 import com.virjar.xposedhooktool.hotload.SharedObject;
-import com.virjar.xposedhooktool.tool.ReflectUtil;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -35,17 +34,6 @@ class FragmentHooker {
             XposedBridge.log(e);
             return;
         }
-        XposedHelpers.findAndHookConstructor(fragmentClass, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                super.afterHookedMethod(param);
-                if (param.thisObject == null) {
-                    return;
-                }
-                ReflectUtil.findAndHookMethodWithSupperClass(param.thisObject.getClass(), "onResume", fragmentResumeHook);
-                //XposedHelpers.findAndHookMethod(param.thisObject.getClass(), "onResume", fragmentResumeHook);
-            }
-        });
-
+        XposedHelpers.findAndHookMethod(fragmentClass, "onResume", fragmentResumeHook);
     }
 }
