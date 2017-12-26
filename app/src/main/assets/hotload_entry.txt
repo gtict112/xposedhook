@@ -3,3 +3,4 @@
 
 #the test hook
 com.virjar.xposedhooktool.apphook.TestHook
+com.virjar.xposedhooktool.apphook.UmeTrip

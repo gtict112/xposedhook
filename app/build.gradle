@@ -24,6 +24,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    provided fileTree(dir: 'hiddenlib', includes: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
@@ -37,4 +38,10 @@ dependencies {
     testCompile 'junit:junit:4.12'
     //最新版本这里可以看到 https://bintray.com/rovo89/de.robv.android.xposed/api
     provided 'de.robv.android.xposed:api:82'
+    //尝试hook okHttp，因为异步可能导致堆栈爆破无效
+//    provided 'com.squareup.okhttp:okhttp:2.7.5'
+//    provided group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.9.1'
+    // https://mvnrepository.com/artifact/com.alibaba/fastjson
+    compile group: 'com.alibaba', name: 'fastjson', version: '1.1.67.android'
+
 }

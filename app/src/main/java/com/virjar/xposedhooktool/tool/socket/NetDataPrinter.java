@@ -255,7 +255,7 @@ public class NetDataPrinter {
                                             synchronized (socket) {
                                                 osp = outMap.get(socket);
                                                 if (osp == null) {
-                                                    osp = new OutputStreamPrinter(socket, socketPrinterMap.get(socket));
+                                                    osp = new OutputStreamPrinter(socket, socketPrinterMap.get(socket), printStackTrack);
                                                     outMap.put(socket, osp);
                                                 }
                                             }
@@ -307,7 +307,7 @@ public class NetDataPrinter {
                                             synchronized (socket) {
                                                 osp = outMap.get(socket);
                                                 if (osp == null) {
-                                                    osp = new OutputStreamPrinter(socket, socketPrinterMap.get(socket));
+                                                    osp = new OutputStreamPrinter(socket, socketPrinterMap.get(socket), printStackTrack);
                                                     outMap.put(socket, osp);
                                                 }
                                             }
@@ -419,7 +419,7 @@ public class NetDataPrinter {
                                             synchronized (socket) {
                                                 isp = inMap.get(socket);
                                                 if (isp == null) {
-                                                    isp = new InputStreamPrinter(socket, socketPrinterMap.get(socket));
+                                                    isp = new InputStreamPrinter(socket, socketPrinterMap.get(socket), printStackTrace);
                                                     inMap.put(socket, isp);
                                                 }
                                             }
@@ -467,7 +467,7 @@ public class NetDataPrinter {
                                             synchronized (socket) {
                                                 isp = inMap.get(socket);
                                                 if (isp == null) {
-                                                    isp = new InputStreamPrinter(socket, socketPrinterMap.get(socket));
+                                                    isp = new InputStreamPrinter(socket, socketPrinterMap.get(socket), printStackTrace);
                                                     inMap.put(socket, isp);
                                                 }
                                             }

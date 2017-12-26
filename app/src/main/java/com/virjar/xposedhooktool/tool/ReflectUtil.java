@@ -20,7 +20,7 @@ public class ReflectUtil {
                     error = e;
                 }
             }
-        } while ((theClazz = clazz.getSuperclass()) != null);
+        } while ((theClazz = theClazz.getSuperclass()) != null);
         throw error;
     }
 }

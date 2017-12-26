@@ -83,6 +83,7 @@ public class XposedInit implements IXposedHookLoadPackage {
         }
 
         //hotClassLoader can load apk class && classLoader.getParent() can load xposed framework and android framework
+        //使用parent是为了绕过缓存，也就是不走系统启动的时候链接的插件apk，但是xposed框架在这个classloader里面持有，所以集成
         PathClassLoader hotClassLoader = createClassLoader(classLoader.getParent(), packageInfo);
         try {
             Class<?> aClass = hotClassLoader.loadClass("com.virjar.xposedhooktool.hotload.HotLoadPackageEntry");
