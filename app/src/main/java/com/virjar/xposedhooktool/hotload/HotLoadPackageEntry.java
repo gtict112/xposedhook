@@ -80,11 +80,19 @@ public class HotLoadPackageEntry {
             String moduleClassName;
             while ((moduleClassName = moduleClassesReader.readLine()) != null) {
                 moduleClassName = moduleClassName.trim();
-                if (moduleClassName.isEmpty() || moduleClassName.startsWith("#")) {
+                //ignore blank
+                if (moduleClassName.isEmpty()) {
+                    continue;
+                }
+                //ignore for comment
+                if (moduleClassName.startsWith("#")) {
+                    continue;
+                }
+                //ignore for action
+                if (moduleClassName.startsWith("action:")) {
                     continue;
                 }
                 try {
-                    XposedBridge.log("  Loading class " + moduleClassName);
                     Class<?> moduleClass = SharedObject.pluginClassLoader.loadClass(moduleClassName);
 
                     if (!XposedHotLoadCallBack.class.isAssignableFrom(moduleClass)) {
