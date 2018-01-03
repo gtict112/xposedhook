@@ -8,6 +8,13 @@ import de.robv.android.xposed.XC_MethodHook;
  */
 
 public abstract class SingletonXC_MethodHook extends XC_MethodHook {
+    public SingletonXC_MethodHook() {
+    }
+
+    public SingletonXC_MethodHook(int priority) {
+        super(priority);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
