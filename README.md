@@ -71,3 +71,7 @@ Warning for developers to disable "Instant Run" in Android Studio, otherwise the
 ```
 所以如果你开启了``Instant Run``，Xposed将不会加载插件，当然本工具也不会去加载她。关闭方案：
 ![如何关闭Instant Run](doc/img/close_instant_run.png)
+
+不支持``Instant Run``的原因是，``Instant Run``本身也是一个热加载框架，他将我们的apk代码当做了资源，然后使用PathClassLoader动态加载代码，实现代码的局部热替换，
+开启``Instant Run``后，Xposed框架和本框架所能够识别到的代码是``Instant Run``框架，而非我们的插件代码本身（插件代码身份是Instant Run的资源文件），我们必须模拟一个
+Android环境，启动``Instant Run``框架后，由改``Instant Run``框架加载插件apk代码。。。。。
