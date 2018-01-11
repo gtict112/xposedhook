@@ -7,8 +7,10 @@ import android.content.pm.PackageManager;
 
 import com.google.common.collect.Maps;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.InputStream;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -91,6 +93,14 @@ public class XposedInit implements IXposedHookLoadPackage {
                     .getMethod("entry", ClassLoader.class, ClassLoader.class, Context.class, XC_LoadPackage.LoadPackageParam.class, String.class)
                     .invoke(null, ownerClassLoader, hotClassLoader, context, lpparam, packageInfo.applicationInfo.sourceDir);
         } catch (Exception e) {
+            if (e instanceof ClassNotFoundException) {
+                InputStream inputStream = hotClassLoader.getResourceAsStream("assets/hotload_entry.txt");
+                if (inputStream == null) {
+                    XposedBridge.log("do you not disable Instant Runt for Android studio?");
+                } else {
+                    IOUtils.closeQuietly(inputStream);
+                }
+            }
             XposedBridge.log(e);
         }
     }

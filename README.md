@@ -56,3 +56,18 @@ DroidSword是我在了解热加载方案的时候，发现作者的另一个项�
 
 ### DroidSword效果
 ![DroidSword效果图](doc/img/DroidSword.jpg)
+
+## 一个暗坑
+如果你在Android studio编译该项目，请关闭Android studio的Instant Run功能。xposed本身也是不支持Instant Run的
+```
+Updated to the official Xposed v85:
+Fixed frequent boot freezes, especially with modules that access many files (details)
+Built-in way to get a full logcat (details)
+Crashes not related to Xposed/ART are no longer written to the normal Xposed logs
+On encrypted devices with boot password, the password prompt is now shown quicker
+Warning for developers to disable "Instant Run" in Android Studio, otherwise the module can't be loaded
+6.0 only: Cherry-picked some ART commit included in CyanogenMod and other ROMs
+6.0 only: Forced clearing Dalvik cache when upgrading from versions before 85 (would have been necessary for 84 and might have caused some boot loops)
+```
+所以如果你开启了``Instant Run``，Xposed将不会加载插件，当然本工具也不会去加载她。关闭方案：
+![如何关闭Instant Run](doc/img/close_instant_run.png)
