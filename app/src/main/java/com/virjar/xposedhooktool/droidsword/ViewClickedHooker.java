@@ -26,7 +26,12 @@ class ViewClickedHooker {
             View view = (View) param.thisObject;
             String onClickListenerName;
             if (view instanceof AdapterView) {
-                onClickListenerName = XposedHelpers.getObjectField(view, "mOnItemClickListener").getClass().getName();
+                Object mOnItemClickListener = XposedHelpers.getObjectField(view, "mOnItemClickListener");
+                //why maybe null??
+                if (mOnItemClickListener == null) {
+                    return;
+                }
+                onClickListenerName = mOnItemClickListener.getClass().getName();
             } else {
                 Object mListenerInfo = XposedHelpers.getObjectField(view, "mListenerInfo");
                 Object objectField = null;

@@ -5,6 +5,7 @@
 com.virjar.xposedhooktool.apphook.TestHook
 com.virjar.xposedhooktool.apphook.UmeTrip
 com.virjar.xposedhooktool.apphook.XiGua
+com.virjar.xposedhooktool.apphook.ZH
 
 # this is control action config
 action:kill-package:com.umetrip.android.msky.app

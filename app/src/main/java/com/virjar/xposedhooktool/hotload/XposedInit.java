@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.util.Log;
 
 import com.google.common.collect.Maps;
 
@@ -36,8 +37,9 @@ public class XposedInit implements IXposedHookLoadPackage {
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) {
         XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
+
             @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 hotLoadPlugin(lpparam.classLoader, (Context) param.args[0], lpparam);
             }
         });
@@ -60,6 +62,7 @@ public class XposedInit implements IXposedHookLoadPackage {
         //更加标准的做法，读取AndroidManifest.xml，解析PackageName，可以参考apkTool的做法，或者参考ApkInstaller的代码
         String pluginApkLocation = matcher.group(1);
         String packageName = findPackageName(pluginApkLocation);
+        Log.i("weijia", "find plugin package name:" + packageName);
         if (StringUtils.isBlank(packageName)) {
             XposedBridge.log("can not find mirror of apk :" + pluginApkLocation);
             return;
@@ -84,11 +87,14 @@ public class XposedInit implements IXposedHookLoadPackage {
             return;
         }
 
+        Log.i("weijia", "get package info for plugin");
         //hotClassLoader can load apk class && classLoader.getParent() can load xposed framework and android framework
         //使用parent是为了绕过缓存，也就是不走系统启动的时候链接的插件apk，但是xposed框架在这个classloader里面持有，所以集成
         PathClassLoader hotClassLoader = createClassLoader(classLoader.getParent(), packageInfo);
+        Log.i("weijia", "create a new classloader for plugin");
         try {
             Class<?> aClass = hotClassLoader.loadClass("com.virjar.xposedhooktool.hotload.HotLoadPackageEntry");
+            Log.i("weijia", "invoke hot load entry");
             aClass
                     .getMethod("entry", ClassLoader.class, ClassLoader.class, Context.class, XC_LoadPackage.LoadPackageParam.class, String.class)
                     .invoke(null, ownerClassLoader, hotClassLoader, context, lpparam, packageInfo.applicationInfo.sourceDir);

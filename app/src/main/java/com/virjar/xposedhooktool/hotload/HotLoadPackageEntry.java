@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.google.common.collect.Lists;
 import com.virjar.xposedhooktool.droidsword.DroidSword;
+import com.virjar.xposedhooktool.jsinject.SocketServer;
 import com.virjar.xposedhooktool.tool.log.LogUtil;
 import com.virjar.xposedhooktool.tool.okhttp.OkHttpClientHook;
 import com.virjar.xposedhooktool.tool.socket.NetDataPrinter;
@@ -60,6 +61,9 @@ public class HotLoadPackageEntry {
 
         //开启okhttp 异步拦截
         OkHttpClientHook.hook();
+
+        //开启js websocket服务
+        SocketServer.start();
 
         //加载业务代码回调
         for (XposedHotLoadCallBack callBack : allCallBack) {
