@@ -53,9 +53,12 @@ public class XposedInit implements IXposedHookLoadPackage {
             return;
         }
 
-        PathClassLoader parentClassLoader = (PathClassLoader) classLoader;
-
-        String packageName = findPackageName(parentClassLoader);
+        //find the apk location installed in android system,this file maybe a dex cache mapping(do not the real installed apk)
+        File apkLocation = bindApkLocation(classLoader);
+        if (apkLocation == null) {
+            return;
+        }
+        String packageName = findPackageName(apkLocation);
         if (StringUtils.isBlank(packageName)) {
             XposedBridge.log("can not find package name  for this apk :");
             return;
@@ -80,11 +83,17 @@ public class XposedInit implements IXposedHookLoadPackage {
             return;
         }
 
-        Log.i("weijia", "get package info for plugin");
-        //hotClassLoader can load apk class && classLoader.getParent() can load xposed framework and android framework
-        //使用parent是为了绕过缓存，也就是不走系统启动的时候链接的插件apk，但是xposed框架在这个classloader里面持有，所以集成
-        PathClassLoader hotClassLoader = createClassLoader(classLoader.getParent(), packageInfo);
-        Log.i("weijia", "create a new classloader for plugin");
+        PathClassLoader hotClassLoader;
+        //check if apk file has relocated,apk location maybe change if xposed plugin is reinstalled(system did not reboot)
+        //xposed 插件安装后不能立即生效（需要重启Android系统）的本质原因是这两个文件不equal
+        if (new File(packageInfo.applicationInfo.sourceDir).equals(apkLocation)) {
+            hotClassLoader = (PathClassLoader) classLoader;
+        } else {
+            //hotClassLoader can load apk class && classLoader.getParent() can load xposed framework and android framework
+            //使用parent是为了绕过缓存，也就是不走系统启动的时候链接的插件apk，但是xposed框架在这个classloader里面持有，所以集成
+            Log.i("weijia", "create a new classloader for plugin");
+            hotClassLoader = createClassLoader(classLoader.getParent(), packageInfo);
+        }
         try {
             Class<?> aClass = hotClassLoader.loadClass("com.virjar.xposedhooktool.hotload.HotLoadPackageEntry");
             Log.i("weijia", "invoke hot load entry");
@@ -133,7 +142,7 @@ public class XposedInit implements IXposedHookLoadPackage {
      */
     private static final String ANDROID_MANIFEST_FILENAME = "AndroidManifest.xml";
 
-    private String findPackageName(PathClassLoader pathClassLoader) {
+    private File bindApkLocation(ClassLoader pathClassLoader) {
         // 不能使用getResourceAsStream，这是因为classloader双亲委派的影响
 //        InputStream stream = pathClassLoader.getResourceAsStream(ANDROID_MANIFEST_FILENAME);
 //        if (stream == null) {
@@ -161,7 +170,11 @@ public class XposedInit implements IXposedHookLoadPackage {
         // /data/app/com.virjar.xposedhooktool/base.apk
         // /data/app/com.virjar.xposedhooktool-1/base.apk
         // /data/app/com.virjar.xposedhooktool-2/base.apk
-        File originSourceFile = (File) XposedHelpers.getObjectField(dexElement, "zip");
+        return (File) XposedHelpers.getObjectField(dexElement, "zip");
+    }
+
+    private String findPackageName(File originSourceFile) {
+
         ZipFile zipFile = null;
         InputStream stream = null;
         try {
