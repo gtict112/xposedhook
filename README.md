@@ -75,3 +75,13 @@ Warning for developers to disable "Instant Run" in Android Studio, otherwise the
 不支持``Instant Run``的原因是，``Instant Run``本身也是一个热加载框架，他将我们的apk代码当做了资源，然后使用PathClassLoader动态加载代码，实现代码的局部热替换，
 开启``Instant Run``后，Xposed框架和本框架所能够识别到的代码是``Instant Run``框架，而非我们的插件代码本身（插件代码身份是Instant Run的资源文件），我们必须模拟一个
 Android环境，启动``Instant Run``框架后，由改``Instant Run``框架加载插件apk代码。。。。。
+
+## 另一个暗坑
+关于热加载偶尔失效，这时xposed的日志如下
+```
+  Loading modules from /data/app/xxxx-1/base.apk
+  File does not exist
+```
+这个确定是xposed的bug，但是在不使用热加载的时候，该bug几乎不会出现，具体原因我就不描述了，和插件安装，系统重启的流程有关。当遇到这个场景时，可能重启无效，解决方案是需要触发一下插件安装，再重启Android系统。
+1. 点击Android的代码安装按钮，将apk重新安装到手机（即使代码没有任何更新），这么做的目的是使用XposedInstaller重新维护插件apk的真实地址
+2. 重启Android系统

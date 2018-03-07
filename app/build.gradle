@@ -53,6 +53,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.mozilla/rhino
     compile group: 'org.mozilla', name: 'rhino', version: '1.7.8'
     compile group: 'com.koushikdutta.async', name: 'androidasync', version: '2.2.1'
-
+    compile 'com.github.tony19:apktool-lib:1.4.4-5'
 
 }

@@ -10,12 +10,15 @@ import com.google.common.collect.Maps;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.xmlpull.v1.XmlPullParser;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ConcurrentMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.zip.ZipFile;
 
+import brut.androlib.res.decoder.AXmlResourceParser;
 import dalvik.system.PathClassLoader;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -31,8 +34,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * @author virjar@virjar.com
  */
 public class XposedInit implements IXposedHookLoadPackage {
-
-    private static final Pattern dexPath4ClassLoaderPattern = Pattern.compile("\\[zip file \"(.+)\"");
 
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) {
@@ -53,18 +54,10 @@ public class XposedInit implements IXposedHookLoadPackage {
         }
 
         PathClassLoader parentClassLoader = (PathClassLoader) classLoader;
-        String classloaderDescription = parentClassLoader.toString();
-        Matcher matcher = dexPath4ClassLoaderPattern.matcher(classloaderDescription);
-        if (!matcher.find()) {
-            XposedBridge.log("can not find plugin apk file location");
-            return;
-        }
-        //更加标准的做法，读取AndroidManifest.xml，解析PackageName，可以参考apkTool的做法，或者参考ApkInstaller的代码
-        String pluginApkLocation = matcher.group(1);
-        String packageName = findPackageName(pluginApkLocation);
-        Log.i("weijia", "find plugin package name:" + packageName);
+
+        String packageName = findPackageName(parentClassLoader);
         if (StringUtils.isBlank(packageName)) {
-            XposedBridge.log("can not find mirror of apk :" + pluginApkLocation);
+            XposedBridge.log("can not find package name  for this apk :");
             return;
         }
 
@@ -134,21 +127,74 @@ public class XposedInit implements IXposedHookLoadPackage {
         }
     }
 
-    private static final Pattern apkNamePattern = Pattern.compile("/data/app/([^/]+).*");
 
-    private String findPackageName(String apkLocation) {
-        Matcher matcher = apkNamePattern.matcher(apkLocation);
-        if (!matcher.matches()) {
+    /**
+     * File name in an APK for the Android manifest.
+     */
+    private static final String ANDROID_MANIFEST_FILENAME = "AndroidManifest.xml";
+
+    private String findPackageName(PathClassLoader pathClassLoader) {
+        // 不能使用getResourceAsStream，这是因为classloader双亲委派的影响
+//        InputStream stream = pathClassLoader.getResourceAsStream(ANDROID_MANIFEST_FILENAME);
+//        if (stream == null) {
+//            XposedBridge.log("can not find AndroidManifest.xml in classloader");
+//            return null;
+//        }
+
+        // we can`t call package parser in android inner api,parse logic implemented with native code
+        //this object is dalvik.system.DexPathList,android inner api
+        Object pathList = XposedHelpers.getObjectField(pathClassLoader, "pathList");
+        if (pathList == null) {
+            XposedBridge.log("can not find pathList in pathClassLoader");
             return null;
         }
-        String candidatePackageName = matcher.group(1);
-        //com.virjar.xposedhooktool-1
-        //com.virjar.xposedhooktool-2
-        //com.virjar.xposedhooktool
-        matcher = Pattern.compile("(.+)-\\d+").matcher(candidatePackageName);
-        if (matcher.find()) {
-            return matcher.group(1);
+
+        //this object is  dalvik.system.DexPathList.Element[]
+        Object[] dexElements = (Object[]) XposedHelpers.getObjectField(pathList, "dexElements");
+        if (dexElements == null || dexElements.length == 0) {
+            XposedBridge.log("can not find dexElements in pathList");
+            return null;
         }
-        return candidatePackageName;
+
+        Object dexElement = dexElements[0];
+
+        // /data/app/com.virjar.xposedhooktool/base.apk
+        // /data/app/com.virjar.xposedhooktool-1/base.apk
+        // /data/app/com.virjar.xposedhooktool-2/base.apk
+        File originSourceFile = (File) XposedHelpers.getObjectField(dexElement, "zip");
+        ZipFile zipFile = null;
+        InputStream stream = null;
+        try {
+            zipFile = new ZipFile(originSourceFile);
+            stream = zipFile.getInputStream(zipFile.getEntry(ANDROID_MANIFEST_FILENAME));
+            AXmlResourceParser xpp = new AXmlResourceParser(stream);
+            int eventType;
+            //migrated form ApkTool
+            while ((eventType = xpp.next()) > -1) {
+                if (XmlPullParser.END_DOCUMENT == eventType) {
+                    return null;
+                } else if (XmlPullParser.START_TAG == eventType && "manifest".equalsIgnoreCase(xpp.getName())) {
+                    // read <manifest> for package:
+                    for (int i = 0; i < xpp.getAttributeCount(); i++) {
+                        if (StringUtils.equalsIgnoreCase(xpp.getAttributeName(i), "package")) {
+                            return xpp.getAttributeValue(i);
+                        }
+                    }
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            XposedBridge.log(e);
+            return null;
+        } finally {
+            try {
+                if (zipFile != null) {
+                    zipFile.close();
+                }
+            } catch (IOException e) {
+                //ignore
+            }
+            IOUtils.closeQuietly(stream);
+        }
     }
 }
