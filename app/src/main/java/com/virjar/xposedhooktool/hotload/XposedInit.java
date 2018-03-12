@@ -1,5 +1,6 @@
 package com.virjar.xposedhooktool.hotload;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -46,6 +47,7 @@ public class XposedInit implements IXposedHookLoadPackage {
         });
     }
 
+    @SuppressLint("PrivateApi")
     private void hotLoadPlugin(ClassLoader ownerClassLoader, Context context, XC_LoadPackage.LoadPackageParam lpparam) {
         ClassLoader classLoader = XposedInit.class.getClassLoader();
         if (!(classLoader instanceof PathClassLoader)) {
@@ -94,6 +96,20 @@ public class XposedInit implements IXposedHookLoadPackage {
             Log.i("weijia", "create a new classloader for plugin");
             hotClassLoader = createClassLoader(classLoader.getParent(), packageInfo);
         }
+
+        // check  Instant Run, 热加载启动后，需要重新检查Instant Run
+        boolean hasInstantRun = true;
+        try {
+            hotClassLoader.loadClass(INSTANT_RUN_CLASS);
+        } catch (ClassNotFoundException e) {
+            //正常情况应该报错才对
+            hasInstantRun = false;
+        }
+        if (hasInstantRun) {
+            Log.e("weijia", "  Cannot load module, please disable \"Instant Run\" in Android Studio.");
+            return;
+        }
+
         try {
             Class<?> aClass = hotClassLoader.loadClass("com.virjar.xposedhooktool.hotload.HotLoadPackageEntry");
             Log.i("weijia", "invoke hot load entry");
@@ -113,6 +129,7 @@ public class XposedInit implements IXposedHookLoadPackage {
         }
     }
 
+    private static final String INSTANT_RUN_CLASS = "com.android.tools.fd.runtime.BootstrapApplication";
     private static ConcurrentMap<String, PathClassLoader> classLoaderCache = Maps.newConcurrentMap();
 
     /**
