@@ -7,6 +7,7 @@ import com.virjar.xposedhooktool.droidsword.DroidSword;
 import com.virjar.xposedhooktool.jsinject.SocketServer;
 import com.virjar.xposedhooktool.tool.log.LogUtil;
 import com.virjar.xposedhooktool.tool.okhttp.OkHttpClientHook;
+import com.virjar.xposedhooktool.tool.okhttp.ThreadPoolHook;
 import com.virjar.xposedhooktool.tool.socket.NetDataPrinter;
 import com.virjar.xposedhooktool.tool.webview.WebViewDebuggerController;
 
@@ -61,6 +62,9 @@ public class HotLoadPackageEntry {
 
         //开启okhttp 异步拦截
         OkHttpClientHook.hook();
+
+        //监控所有异步任务的堆栈，彻底解决通过堆栈定位代码，遇到异步无法定位的尴尬
+        ThreadPoolHook.monitorThreadPool();
 
         //开启js websocket服务
         SocketServer.start();

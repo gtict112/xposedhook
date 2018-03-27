@@ -2,6 +2,8 @@ package com.virjar.xposedhooktool.tool.log;
 
 import android.app.Application;
 
+import com.virjar.xposedhooktool.tool.okhttp.ThreadPoolHook;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -162,19 +164,22 @@ public class LogUtil {
     }
 
     public static String getTrack() {
-        return getTrack(new Throwable());
+        return getTrack(ThreadPoolHook.stackTraceChain());
     }
 
     public static String getTrack(Throwable e) {
-        String msg = "\n=============>\n";
-        if (e != null) {
+        StringBuilder msg = new StringBuilder("\n=============>\n");
+        while (e != null) {
             StackTraceElement[] ste = e.getStackTrace();
             for (StackTraceElement stackTraceElement : ste) {
-                msg += (stackTraceElement.getClassName() + "." + stackTraceElement.getMethodName() + ":"
-                        + stackTraceElement.getLineNumber() + "\n");
+                msg.append(stackTraceElement.getClassName()).append(".").append(stackTraceElement.getMethodName()).append(":").append(stackTraceElement.getLineNumber()).append("\n");
+            }
+            e = e.getCause();
+            if (e != null) {
+                msg.append("cause ").append(e.getMessage()).append("\n\n");
             }
         }
-        msg += "<================\n";
-        return msg;
+        msg.append("<================\n");
+        return msg.toString();
     }
 }
